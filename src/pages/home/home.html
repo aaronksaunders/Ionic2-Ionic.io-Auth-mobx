@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Ionic Blank
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding *mobxReaction="checkLoginStatus.bind(this)">
+  The world is your oyster. {{this.auth.activeUser?.email}}
+  <p>
+    <button ion-button (click)="doLogout()">LOGOUT</button>
+  </p>
+  <div *mobxAutorun>
+    <div>
+      <ion-item>
+        <ion-label color="primary">Enter Title</ion-label>
+        <ion-input placeholder="Text Input" [(ngModel)]="something.title" name="title"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label color="primary">Enter Task</ion-label>
+        <ion-input placeholder="Text Input" [(ngModel)]="something.task" name="task"></ion-input>
+      </ion-item>
+      <button ion-button (click)="doAddStuff()">Add Stuff</button>
+    </div>
+    <div>
+      <thing-list [list]="db.myStuff" (deleteClicked)="doDeleteItem($event)"></thing-list>
+    </div>
+  </div>
+</ion-content>
