@@ -1,3 +1,4 @@
+import { when } from 'mobx';
 import { IonicDatabase } from './../../providers/database';
 import { LoginPage } from './../login/login';
 import { Component, ChangeDetectionStrategy, Input, Output, EventEmitter, NgZone } from '@angular/core';
@@ -55,6 +56,7 @@ export class ThingItemComponent {
 export class HomePage {
 
   something: any = { title: "Aaron" }
+  fromWhen:any;
 
   constructor(
     public navCtrl: NavController,
@@ -65,6 +67,20 @@ export class HomePage {
     this.something.title = "Aaron"
 
     this.db.getAllStuff()
+  }
+
+  ionViewDidLoad() {
+    console.log('ionViewDidLoad LoginPage');
+
+    this.fromWhen = when(
+      () => {
+        return this.auth.activeUser === null
+      },
+      () => {
+        console.log("User GONE!!... goto login")
+        this.navCtrl.setRoot(LoginPage)
+      }
+    )
   }
 
   doDeleteItem(_params) {

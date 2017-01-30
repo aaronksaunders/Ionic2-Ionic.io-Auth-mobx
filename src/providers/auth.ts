@@ -1,5 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, when } from 'mobx';
 import 'rxjs/add/operator/map';
 
 import { Auth, User, IDetailedError } from '@ionic/cloud-angular';
@@ -40,11 +40,13 @@ export class Authentication {
 
       let details = { 'email': _username, 'password': _password };
 
-      this.auth.login('basic', details).then((_result) => {
+      return this.auth.login('basic', details).then((_result) => {
         // create the user object based on the data retrieved...
         this.activeUser = Object.assign({}, this.user.details, { id: this.user.id });
+        return this.activeUser
       }, (err) => {
         console.log(err)
+        return err;
       });
 
     }

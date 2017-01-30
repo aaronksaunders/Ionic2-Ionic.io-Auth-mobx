@@ -1,9 +1,11 @@
-import { Auth } from '@ionic/cloud-angular';
+import { User } from '@ionic/cloud-angular';
+
 import { HomePage } from './../home/home';
-import { MyApp } from './../../app/app.component';
 import { Component } from '@angular/core';
 import { NavController, NavParams, AlertController } from 'ionic-angular';
 import { Authentication } from '../../providers/auth'
+
+import { when } from 'mobx';
 
 /*
   Generated class for the Login page.
@@ -17,6 +19,8 @@ import { Authentication } from '../../providers/auth'
 })
 export class LoginPage {
 
+  fromWhen: any;
+
   constructor(
     public navCtrl: NavController,
     public navParams: NavParams,
@@ -25,6 +29,16 @@ export class LoginPage {
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad LoginPage');
+
+    this.fromWhen = when(
+      () => {
+        return this.auth.activeUser && this.auth.activeUser.id !== null
+      },
+      () => {
+        console.log("have User... goto home", this.auth.activeUser)
+        this.navCtrl.setRoot(HomePage)
+      }
+    )
   }
 
   /**
@@ -37,16 +51,33 @@ export class LoginPage {
   }
   doLogin(_email, _password) {
     this.auth.doLogin(_email.value, _password.value)
+      .then((resp) => {
+        console.log(resp);
+        if (resp.response && resp.response.statusCode) {
+          let r = JSON.parse(resp.response.text)
+          this.alertCtrl.create({
+            title: "Error Logging In User",
+            subTitle: r.error.message,
+            buttons: [
+              'Dismiss'
+            ]
+          }).present();
+        }
+      }, (error) => {
+        alert(error.message)
+      })
   }
 
-/**
- * this is called when ever Auth.activeUser changes
- */
+
+
+  /**
+   * this is called when ever Auth.activeUser changes
+   */
   checkLoginStatus() {
     // get the user...
-    if (this.auth.activeUser) {
-      this.navCtrl.setRoot(HomePage)
-    }
+    // if (this.auth.activeUser) {
+    //   this.navCtrl.setRoot(HomePage)
+    // }
   }
 
   presentUserNamePrompt(_email, _password) {

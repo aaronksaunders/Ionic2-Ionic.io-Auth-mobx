@@ -6,7 +6,11 @@
   </ion-navbar>
 </ion-header>
 
+<!--
 <ion-content padding *mobxReaction="checkLoginStatus.bind(this)">
+-->
+<ion-content padding>
+
   The world is your oyster. {{this.auth.activeUser?.email}}
   <p>
     <button ion-button (click)="doLogout()">LOGOUT</button>

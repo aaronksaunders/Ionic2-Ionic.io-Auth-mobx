@@ -10,15 +10,17 @@
   </ion-navbar>
 </ion-header>
 
-
+<!--
 <ion-content padding  *mobxReaction="checkLoginStatus.bind(this)">
+-->
+<ion-content padding>
   <ion-item>
     <ion-label color="primary">Email</ion-label>
     <ion-input text #email placeholder="user@mail.com"></ion-input>
   </ion-item>
   <ion-item>
     <ion-label color="primary">Password</ion-label>
-    <ion-input type="password" #password ></ion-input>
+    <ion-input type="password" #password></ion-input>
   </ion-item>
   <ion-item>
     <button ion-button (click)="doLogin(email, password)">LOGIN</button>
