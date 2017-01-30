@@ -7,7 +7,7 @@ Simple Ionic2 App Using Ionic.io Auth And Mobx To Manage Authentication State
 ### Setup your application to use the [Ionic.io Auth Service for Authentication](https://docs.ionic.io/services/auth/); I am only touching on the key changes in the application to support the use of [ng2-mobx](https://github.com/500tech/ng2-mobx) to managing authentication state
 
 Lets add mobx to your project, **More Information on Mobx in Angular2 can be found here [https://github.com/500tech/ng2-mobx](https://github.com/500tech/ng2-mobx)**
-```Javascript
+```javascript
 npm install --save ng2-mobx
 ```
 Import the Ng2MobxModule in `app.module.ts`
@@ -29,8 +29,10 @@ import { Ng2MobxModule } from 'ng2-mobx'; // <== ADDED TO SUPPORT MOBX
 export class AppModule { }
 ```
 
-Lets get into the code changes to get the app working for us; starting with our authentication service in `auth.ts`
-```Javascript
+Lets get into the code changes to get the app working for us; starting with our authentication service in `auth.ts` The first thing is to set a variable to hold the activeUser when we get it
+That user is critical to determining the login state so we want to observe it using the [mobx `observable` decorator](https://mobx.js.org/refguide/observable-decorator.html)
+
+```javascript
 // src/providers/auth.ts
 //
 
@@ -46,7 +48,11 @@ export class Authentication {
 
 We us the Ionic.io Service to login a user and when the user is logged in we set the value of the `activeUser` using the values from the Ionic User object.
 See the ionic documentation for additional information [https://docs.ionic.io/services/auth/](https://docs.ionic.io/services/auth/)
-```Javascript
+
+We mainly use this function at startup to see if there was a user from the previous session that should be activated.
+
+It is important to notice the use of the [mobx `action` decorator](https://mobx.js.org/refguide/action.html) this is used for any function that we believe will modify action state.
+```javascript
 // src/providers/auth.ts
 //
 @action doCheckAuth() {
@@ -55,8 +61,8 @@ See the ionic documentation for additional information [https://docs.ionic.io/se
   }
 }
 ````
-We have this helper computed function which will get updated anything the user changes
-```Javascript
+We have this helper computed function which will get updated anytime the user changes. It is a [mobx computed decorated function](https://mobx.js.org/refguide/computed-decorator.html) they are derived from the existing state of the application and get updated when the state changed
+```javascript
 // src/providers/auth.ts
 /**
   * here we check to see if ionic saved a user for us
@@ -65,8 +71,8 @@ We have this helper computed function which will get updated anything the user c
   return this.activeUser || null
 }
 ```
-Next we have the actual login function, which is maked as an action which will make the magic ove updating state work
-```Javascript
+Next we have the actual login function, which is maked as an action which will make the magic of updating state work. Notice one again the use of the [mobx `action` decorator](https://mobx.js.org/refguide/action.html) this is used for any function that will modify action state. If the user is logged in successfully then the state will be modified.
+```javascript
 // src/providers/auth.ts
 @action doLogin(_username, _password?) {
   if (_username.length) {
@@ -79,7 +85,6 @@ Next we have the actual login function, which is maked as an action which will m
       this.activeUser = Object.assign({}, this.user.details, { id: this.user.id });
     }, (err) => {
       console.log(err)
-      return err;
     });
 
   }
@@ -88,7 +93,7 @@ Next we have the actual login function, which is maked as an action which will m
 ## Handling Login When App Starts Up
 Inside of the `app.component.ts` is where the real work is happening, we call `this.auth.doCheckAuth()` from the Authentication 
 Service to see if we have a user at start up, otherwise go to `LoginPage`
-```Javascript
+```javascript
 // src/app/app.component.ts
 
 // check to see if there is already a user... Ionic saves it for you,
@@ -98,10 +103,10 @@ this.rootPage = this.auth.doCheckAuth() ? HomePage : LoginPage;
 }
 ```
 ## Handling Login On The Login Page
-On the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the `mobx.when` functionality.
+On the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the [`mobx.when`](https://mobx.js.org/refguide/when.html) functionality.
 This function will be called if any of the observable properties in the function are changed
 
-So lets take a look at the use if the `mobx.when` function, if `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we have a user, we go to the `HomePage`
+So lets take a look at the use of the [`mobx.when`](https://mobx.js.org/refguide/when.html) function, if `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we have a user, we go to the `HomePage`
 ```Javascript
 // src/pages/login/login.ts
 ionViewDidLoad() {
@@ -121,14 +126,13 @@ ionViewDidLoad() {
 }
 ```
 ## Handling Logout On The Home Page
-On the `HomePage` much like on the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the `mobx.when()` functonality again.
+On the `HomePage` much like on the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the [`mobx.when()`](https://mobx.js.org/refguide/when.html) functonality again.
 
 The function in `home.ts` is very similar to the `login.ts` except we want to logout; So lets take a look at the code. If `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we do not have a user, we go to the `LoginPage`
 ```Javascript
 // src/pages/home/home.ts
 ionViewDidLoad() {
   console.log('ionViewDidLoad LoginPage');
-
   this.fromWhen = when(
     () => {
       return this.auth.activeUser === null
