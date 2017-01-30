@@ -79,6 +79,7 @@ Next we have the actual login function, which is maked as an action which will m
       this.activeUser = Object.assign({}, this.user.details, { id: this.user.id });
     }, (err) => {
       console.log(err)
+      return err;
     });
 
   }
@@ -97,49 +98,79 @@ this.rootPage = this.auth.doCheckAuth() ? HomePage : LoginPage;
 }
 ```
 ## Handling Login On The Login Page
-On the `LoginPage`, we need to check to see when the state of the activeUser changes so we update the `login.html` to use the `mobxReaction` directive.
+On the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the `mobx.when` functionality.
 This function will be called if any of the observable properties in the function are changed
-```html
-<!-- src/pages/login/login.html -->
-<ion-content padding  *mobxReaction="checkLoginStatus.bind(this)">
-```
-So lets take a look at the `checkLoginStatus` function, if `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we have a user, we go to the `HomePage`
+
+So lets take a look at the use if the `mobx.when` function, if `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we have a user, we go to the `HomePage`
 ```Javascript
 // src/pages/login/login.ts
-/**
- * this is called when ever Auth.activeUser changes
- */
-checkLoginStatus() {
-  // get the user...
-  if (this.auth.activeUser) {
-    this.navCtrl.setRoot(HomePage)
-  }
+ionViewDidLoad() {
+  console.log('ionViewDidLoad LoginPage');
+
+  this.fromWhen = when(
+    () => {
+      // when I have an activeUser, return true
+      return this.auth.activeUser && this.auth.activeUser.id !== null
+    },
+    () => {
+      // this function is called when previous function is true
+      console.log("have User... goto home", this.auth.activeUser)
+      this.navCtrl.setRoot(HomePage)
+    }
+  )
 }
 ```
 ## Handling Logout On The Home Page
-On the `HomePage` much like on the `LoginPage`, we need to check to see when the state of the activeUser changes so we update the `home.html` to use the `mobxReaction` directive.
-This function will be called if any of the observable properties in the function are changed
-```Javascript
-<!-- src/pages/home/home.html -->
-<ion-content padding  *mobxReaction="checkLoginStatus.bind(this)">
-```
-The function in `home.ts` is very similar to the `login.ts` except we want to logout; So lets take a look at the `checkLoginStatus` function. If `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we do not have a user, we go to the `LoginPage`
+On the `HomePage` much like on the `LoginPage`, we need to check to see when the state of the activeUser changes so we use the `mobx.when()` functonality again.
+
+The function in `home.ts` is very similar to the `login.ts` except we want to logout; So lets take a look at the code. If `this.auth.activeUser` is updated in the Authentication Service, then the function is called and if we do not have a user, we go to the `LoginPage`
 ```Javascript
 // src/pages/home/home.ts
-/**
- * this is called when ever Auth.activeUser changes
- */
-checkLoginStatus() {
-  // get the user...
-  if (!this.auth.activeUser) {
-    this.navCtrl.setRoot(LoginPage)
-  }
+ionViewDidLoad() {
+  console.log('ionViewDidLoad LoginPage');
+
+  this.fromWhen = when(
+    () => {
+      return this.auth.activeUser === null
+    },
+    () => {
+      console.log("User GONE!!... goto login")
+      this.navCtrl.setRoot(LoginPage)
+    }
+  )
 }
 ```
 
+## Weird Error Handling with Ionic Cloud Auth when Logging In A User
+So the Ionic Cloud service resolves the promise successfully when there are bad credentials passed to the login function. So we need to check the response code to see how to handle the response
+```Javascript
+doLogin(_email, _password) {
+  this.auth.doLogin(_email.value, _password.value)
+    .then((resp) => {
+      console.log(resp);
+      if (resp.response && resp.response.statusCode) {
+        let r = JSON.parse(resp.response.text)
+        this.alertCtrl.create({
+          title: "Error Logging In User",
+          subTitle: r.error.message,
+          buttons: [
+            'Dismiss'
+          ]
+        }).present();
+      }
+    }, (error) => {
+        this.alertCtrl.create({
+          title: "Error Logging In User",
+          subTitle: error.message,
+          buttons: [
+            'Dismiss'
+          ]
+        }).present();
+    })
+}
+```
 #### More Information
 
 - [http://docs.ionic.io/services/auth/](http://docs.ionic.io/services/auth/)
 - [https://mobx.js.org/](https://mobx.js.org/)
 - [https://github.com/500tech/ng2-mobx](https://github.com/500tech/ng2-mobx)
-
