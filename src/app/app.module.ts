@@ -16,7 +16,7 @@ import { Ng2MobxModule } from 'ng2-mobx'
 
 const cloudSettings: CloudSettings = {
   'core': {
-    'app_id': '2e9a1053'
+    'app_id': 'YOUR-APP-ID'
   }
 };
 
